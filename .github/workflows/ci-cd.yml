@@ -3,7 +3,7 @@ name: Facelog CI
 on:
   push:
     branches:
-      - main # or your default branch
+      - main
 
 jobs:
   build:
@@ -21,8 +21,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run build script
-        run: npm run build
+      - name: Rebuild native modules (lightningcss fix)
+        run: npm rebuild
 
-      - name: Run a simple test script
-        run: echo "Hello! Facelog CI is working!"
+      - name: Build all apps using Turbo
+        run: npm run build
