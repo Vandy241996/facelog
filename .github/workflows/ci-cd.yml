@@ -37,17 +37,17 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > key.pem
           chmod 600 key.pem
           ssh -o StrictHostKeyChecking=no -i key.pem $SERVER_USER@$SERVER_IP << 'EOF'
-            cd facelog
+            cd /facelog
+            git reset --hard
             git pull origin main
+            git log -1
 
             npm install
             npx turbo run build
 
-            cd apps/backend
-            pm2 restart facelog-backend || pm2 start index.js --name facelog-backend
-
-            cd ../frontend
-            pm2 restart facelog-frontend || pm2 start "npm run start" --name facelog-frontend
+            pm2 delete all || true
+            pm2 start apps/backend/index.js --name facelog-backend
+            pm2 start "npm run start" --name facelog-frontend --prefix apps/frontend
 
             pm2 save
           EOF
