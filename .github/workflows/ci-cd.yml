@@ -1,16 +1,19 @@
-name: Facelog CI
+name: Facelog CI/CD
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Setup Node.js
@@ -18,11 +21,29 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm install
 
-      - name: Rebuild native modules (lightningcss fix)
+      - name: Rebuild Native Modules (fix LightningCSS issue)
         run: npm rebuild
 
-      - name: Build all apps using Turbo
+      - name: Build All Packages with Turbo
         run: npm run build
+
+      - name: Deploy to Server with PM2
+        if: github.ref == 'refs/heads/main'
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          echo "$SSH_PRIVATE_KEY" > key.pem
+          chmod 600 key.pem
+          ssh -o StrictHostKeyChecking=no -i key.pem $SERVER_USER@$SERVER_IP << 'EOF'
+            cd facelog
+            git pull origin main
+            npm install
+            npm run build
+            pm2 restart facelog-backend || pm2 start apps/backend/index.js --name facelog-backend
+            pm2 restart facelog-frontend || pm2 start npm --name facelog-frontend --prefix apps/frontend -- run start
+          EOF
