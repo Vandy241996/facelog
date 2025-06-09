@@ -37,7 +37,7 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > key.pem
           chmod 600 key.pem
           ssh -o StrictHostKeyChecking=no -i key.pem $SERVER_USER@$SERVER_IP << 'EOF'
-            cd /facelog
+            cd ~/facelog
             git reset --hard
             git pull origin main
             git log -1
