@@ -43,5 +43,5 @@ jobs:
             cd facelog
             git pull origin main
             npm install
-            npm run build
+            pm2 start "npm run dev" --name turbo-dev
           EOF
