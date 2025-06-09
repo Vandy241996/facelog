@@ -41,8 +41,8 @@ jobs:
           chmod 600 key.pem
           ssh -o StrictHostKeyChecking=no -i key.pem $SERVER_USER@$SERVER_IP << 'EOF'
             cd facelog
-  git pull origin main
-  npm install
-  pm2 delete all || true
-  pm2 start "npm run dev" --name turbo-dev
+            git pull origin main || true
+            npm install
+            pm2 delete all || true
+            pm2 start "npm run dev" --name turbo-dev
           EOF
