@@ -21,7 +21,7 @@ export default function Home() {
             .
           </li>
           <li className="tracking-[-.01em]">
-            Save and see your changes instantly.Test Vandy here!
+            Save and see your changes instantly.Test Vandy Hello!
           </li>
         </ol>
 
@@ -47,7 +47,7 @@ export default function Home() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Read our docs Test
+            Read our docs
           </a>
         </div>
       </main>
