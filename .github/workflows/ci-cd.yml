@@ -1,37 +1,13 @@
+name: My Facelog Workflow
+
+on:
+  Push:
+
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build all with turbo
-        run: npm run build
-
-      - name: Deploy all with turbo
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SERVER_IP: ${{ secrets.SERVER_IP }}
-          SERVER_USER: ${{ secrets.SERVER_USER }}
-        run: |
-          # npm run deploy
-
-          # Or if deploy needs SSH, then do it here:
-          echo "$SSH_PRIVATE_KEY" > facelog.pem
-          chmod 600 facelog.pem
-          ssh -o StrictHostKeyChecking=no -i facelog.pem $SERVER_USER@$SERVER_IP << 'EOF'
-            cd facelog
-            git pull origin main
-            npm install
-            pm2 restart facelog-backend
-            pm2 restart facelog-frontend
-          EOF
+      - uses: actions/checkout@v3
+        name: Run a script
+        run: echo " Hello! Github actions"
