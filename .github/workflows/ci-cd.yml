@@ -44,6 +44,4 @@ jobs:
             git pull origin main
             npm install
             npm run build
-            pm2 restart facelog-backend || pm2 start apps/backend/index.js --name facelog-backend
-            pm2 restart facelog-frontend || pm2 start npm --name facelog-frontend --prefix apps/frontend -- run start
           EOF
