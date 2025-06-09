@@ -46,8 +46,8 @@ jobs:
             npx turbo run build
 
             pm2 delete all || true
-            pm2 start apps/backend/index.js --name facelog-backend
-            pm2 start "npm run start" --name facelog-frontend --prefix apps/frontend
+            pm2 restart facelog-backend || pm2 start apps/backend/index.js --name facelog-backend
+            pm2 restart facelog-frontend || pm2 start bash --name facelog-frontend -- -c "cd apps/frontend && npm run start"
 
             pm2 save
           EOF
