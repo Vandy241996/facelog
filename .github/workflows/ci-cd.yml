@@ -43,6 +43,6 @@ jobs:
             cd facelog
             git pull origin main || true
             npm install
-            pm2 delete all || true
-            pm2 start "npm run dev" --name turbo-dev
+            npm run build
+            pm2 restart turbo-frontend || pm2 start "npm run start" --name turbo-frontend
           EOF
