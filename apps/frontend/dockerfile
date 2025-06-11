@@ -2,12 +2,16 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY apps/frontend/package*.json ./
-RUN npm install
+# Copy only frontend package files
+COPY apps/frontend/package*.json ./apps/frontend/
 
-COPY apps/frontend .
+# Install dependencies only for frontend
+RUN npm install --prefix ./apps/frontend --production
 
-ENV HOST 0.0.0.0
+# Copy frontend source code only
+COPY apps/frontend ./apps/frontend
+
+ENV NODE_ENV=production
 EXPOSE 3000
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "dev", "--prefix", "apps/frontend"]

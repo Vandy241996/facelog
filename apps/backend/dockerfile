@@ -1,21 +1,17 @@
-# Use lightweight Node image
 FROM node:20-alpine
 
-# Set working directory inside container
 WORKDIR /app
 
-# Copy root package.json and package-lock.json
-COPY package*.json ./
+# Copy only backend package files
+COPY apps/backend/package*.json ./apps/backend/
 
-# Copy workspace folders needed (backend + any shared libs if needed)
+# Install dependencies only for backend
+RUN npm install --prefix ./apps/backend --production
+
+# Copy backend source code only
 COPY apps/backend ./apps/backend
-COPY apps/frontend ./apps/frontend 
 
-# Install all dependencies for all workspaces at once
-RUN npm ci --omit=dev
-
-# Expose backend port
+ENV NODE_ENV=production
 EXPOSE 4000
 
-# Start backend app using --prefix to specify workspace
 CMD ["npm", "start", "--prefix", "apps/backend"]
