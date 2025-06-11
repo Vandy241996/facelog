@@ -1,0 +1,43 @@
+name: Build and Deploy to EC2 via Docker Hub
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build and push backend image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/facelog-backend ./apps/backend
+          docker push ${{ secrets.DOCKER_USERNAME }}/facelog-backend
+
+      - name: Build and push frontend image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/facelog-frontend ./apps/frontend
+          docker push ${{ secrets.DOCKER_USERNAME }}/facelog-frontend
+
+      - name: Deploy on EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker pull ${{ secrets.DOCKER_USERNAME }}/facelog-backend
+            docker pull ${{ secrets.DOCKER_USERNAME }}/facelog-frontend
+
+            docker stop backend || true && docker rm backend || true
+            docker stop frontend || true && docker rm frontend || true
+
+            docker run -d --name backend -p 4000:4000 \ -e DATABASE_URL=${{ secrets.DATABASE_URL }} \ ${{ secrets.DOCKER_USERNAME }}/facelog-backend
+            docker run -d --name frontend -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/facelog-frontend

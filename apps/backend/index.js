@@ -1,34 +1,37 @@
-require("dotenv").config();
 const express = require("express");
-const { ApolloServer, gql } = require("apollo-server-express");
-const cors = require("cors");
+const { Pool } = require("pg");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 const app = express();
-app.use(cors());
+const port = process.env.PORT || 4000;
 
-const typeDefs = gql`
-  type Query {
-    hello: String
-  }
-`;
-
-const resolvers = {
-  Query: {
-    hello: () => "Hello from Facelog backend!",
+// PostgreSQL connection with SSL
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
   },
-};
+});
 
-async function startServer() {
-  const server = new ApolloServer({ typeDefs, resolvers });
-  await server.start();
-  server.applyMiddleware({ app, path: "/graphql" });
-
-  const PORT = process.env.PORT || 4000;
-  app.listen(PORT, () => {
-    console.log(
-      `🚀 Server ready at http://localhost:${PORT}${server.graphqlPath}`
-    );
+pool
+  .connect()
+  .then(() => console.log("✅ Connected to PostgreSQL"))
+  .catch((err) => {
+    console.error("❌ Failed to connect to PostgreSQL:", err); // full error
+    process.exit(1);
   });
-}
 
-startServer();
+app.get("/", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW()");
+    res.send(`Hello from PostgreSQL! Time is ${result.rows[0].now}`);
+  } catch (err) {
+    res.status(500).send("DB error: " + err.message);
+  }
+});
+
+app.listen(port, () => {
+  console.log(`🚀 Server is running on port ${port}`);
+});
