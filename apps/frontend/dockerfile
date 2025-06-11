@@ -2,16 +2,11 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy only frontend dependencies
 COPY apps/frontend/package*.json ./
-
-# Install frontend dependencies
 RUN npm install
 
-# Copy frontend source code
 COPY apps/frontend .
 
-# Make sure dev server binds to 0.0.0.0 (edit your package.json if needed)
 ENV HOST 0.0.0.0
 EXPOSE 3000
 
