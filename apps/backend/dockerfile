@@ -1,16 +1,19 @@
-# Base stage: build dependencies
+# Base stage
 FROM node:20-alpine AS deps
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --only=production
 
-# Final stage: runtime image
+# If using production mode
+RUN npm ci --omit=dev
+
+# Or fallback if the above fails (you can test locally first)
+# RUN npm install
+
+# Final stage
 FROM node:20-alpine
 
 WORKDIR /app
-
-# Copy only necessary files
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
