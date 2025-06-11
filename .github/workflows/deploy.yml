@@ -38,19 +38,29 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Pull latest images
-            docker pull ${{ secrets.DOCKER_USERNAME }}/facelog-backend
-            docker pull ${{ secrets.DOCKER_USERNAME }}/facelog-frontend
+            # Free port 3000 (frontend)
+            frontend_pid=$(sudo lsof -t -i:3000 || true)
+            if [ -n "$frontend_pid" ]; then
+              echo "Port 3000 in use by PID $frontend_pid, killing it..."
+              sudo kill -9 $frontend_pid
+            fi
 
-            # Stop and remove old containers if they exist
-            docker ps -q --filter "name=backend" | xargs -r docker stop
-            docker ps -a -q --filter "name=backend" | xargs -r docker rm
+            # Free port 4000 (backend)
+            backend_pid=$(sudo lsof -t -i:4000 || true)
+            if [ -n "$backend_pid" ]; then
+              echo "Port 4000 in use by PID $backend_pid, killing it..."
+              sudo kill -9 $backend_pid
+            fi
 
-            docker ps -q --filter "name=frontend" | xargs -r docker stop
-            docker ps -a -q --filter "name=frontend" | xargs -r docker rm
+            # Stop and remove any existing containers
+            docker stop backend || true
+            docker rm backend || true
+            docker stop frontend || true
+            docker rm frontend || true
 
-            # Optional: Clean up dangling images to save space
+            # Optional: Clean up unused images/layers
             docker image prune -f
+
 
             # Run containers
             docker run -d --name backend -p 4000:4000 -e DATABASE_URL="${{ secrets.DATABASE_URL }}" ${{ secrets.DOCKER_USERNAME }}/facelog-backend
