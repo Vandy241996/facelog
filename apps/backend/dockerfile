@@ -1,23 +1,21 @@
-# Base stage
-FROM node:20-alpine AS deps
-
-WORKDIR /app
-COPY package*.json ./
-
-# If using production mode
-RUN npm ci --omit=dev
-
-# Or fallback if the above fails (you can test locally first)
-# RUN npm install
-
-# Final stage
+# Use lightweight Node image
 FROM node:20-alpine
 
+# Set working directory inside container
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
 
-ENV NODE_ENV=production
+# Copy root package.json and package-lock.json
+COPY package*.json ./
 
+# Copy workspace folders needed (backend + any shared libs if needed)
+COPY apps/backend ./apps/backend
+COPY apps/frontend ./apps/frontend 
+
+# Install all dependencies for all workspaces at once
+RUN npm ci --omit=dev
+
+# Expose backend port
 EXPOSE 4000
-CMD ["npm", "start"]
+
+# Start backend app using --prefix to specify workspace
+CMD ["npm", "start", "--prefix", "apps/backend"]

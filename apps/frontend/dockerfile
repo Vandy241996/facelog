@@ -1,16 +1,21 @@
-# Stage 1: build frontend
-FROM node:20-alpine AS builder
+# Use lightweight Node image
+FROM node:20-alpine
 
+# Set working directory inside container
 WORKDIR /app
+
+# Copy root package.json and package-lock.json
 COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
 
-# Stage 2: serve static files with NGINX
-FROM nginx:stable-alpine
+# Copy workspace folders needed (backend + any shared libs if needed)
+COPY apps/backend ./apps/backend
+COPY apps/frontend ./apps/frontend
 
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Install all dependencies for all workspaces at once
+RUN npm ci --omit=dev
 
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Expose backend port
+EXPOSE 4000
+
+# Start backend app using --prefix to specify workspace
+CMD ["npm", "start", "--prefix", "apps/backend"]
