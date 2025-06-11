@@ -38,31 +38,23 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Free port 3000 (frontend)
-            frontend_pid=$(sudo lsof -t -i:3000 || true)
-            if [ -n "$frontend_pid" ]; then
-              echo "Port 3000 in use by PID $frontend_pid, killing it..."
-              sudo kill -9 $frontend_pid
-            fi
+            echo "🛑 Killing any process using ports 3000 or 4000..."
+            fuser -k 3000/tcp || true
+            fuser -k 4000/tcp || true
 
-            # Free port 4000 (backend)
-            backend_pid=$(sudo lsof -t -i:4000 || true)
-            if [ -n "$backend_pid" ]; then
-              echo "Port 4000 in use by PID $backend_pid, killing it..."
-              sudo kill -9 $backend_pid
-            fi
+            echo "🧼 Stopping/removing any existing containers..."
+            docker stop frontend || true && docker rm frontend || true
+            docker stop backend || true && docker rm backend || true
 
-            # Stop and remove any existing containers
-            docker stop backend || true
-            docker rm backend || true
-            docker stop frontend || true
-            docker rm frontend || true
+            echo "🧹 Cleaning up unused Docker images/layers..."
+            docker system prune -af || true
 
-            # Optional: Clean up unused images/layers
-            docker image prune -f
+            echo "📦 Pulling new images..."
+            docker pull ${{ secrets.DOCKER_USERNAME }}/facelog-frontend
+            docker pull ${{ secrets.DOCKER_USERNAME }}/facelog-backend
 
-
-            # Run containers
+            echo "🚀 Starting new backend container..."
             docker run -d --name backend -p 4000:4000 -e DATABASE_URL="${{ secrets.DATABASE_URL }}" ${{ secrets.DOCKER_USERNAME }}/facelog-backend
 
+            echo "🚀 Starting new frontend container..."
             docker run -d --name frontend -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/facelog-frontend
