@@ -38,11 +38,21 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            # Pull latest images
             docker pull ${{ secrets.DOCKER_USERNAME }}/facelog-backend
             docker pull ${{ secrets.DOCKER_USERNAME }}/facelog-frontend
 
-            docker stop backend || true && docker rm backend || true
-            docker stop frontend || true && docker rm frontend || true
+            # Stop and remove old containers if they exist
+            docker ps -q --filter "name=backend" | xargs -r docker stop
+            docker ps -a -q --filter "name=backend" | xargs -r docker rm
 
+            docker ps -q --filter "name=frontend" | xargs -r docker stop
+            docker ps -a -q --filter "name=frontend" | xargs -r docker rm
+
+            # Optional: Clean up dangling images to save space
+            docker image prune -f
+
+            # Run containers
             docker run -d --name backend -p 4000:4000 -e DATABASE_URL="${{ secrets.DATABASE_URL }}" ${{ secrets.DOCKER_USERNAME }}/facelog-backend
+
             docker run -d --name frontend -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/facelog-frontend
