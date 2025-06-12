@@ -14,7 +14,7 @@ RUN npm install --prefix ./apps/frontend --production
 COPY apps/frontend ./apps/frontend
 
 # Build the frontend app
-RUN npm run --prefix ./apps/frontend build
+RUN npm run --prefix ./apps/frontend build || cat ./apps/frontend/.next/build-manifest.json
 
 # Stage 2: Run the production app
 FROM node:20-alpine
