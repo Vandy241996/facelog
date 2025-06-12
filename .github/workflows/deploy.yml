@@ -54,7 +54,7 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/facelog-backend
 
             echo "🚀 Starting new backend container..."
-            docker run -d --name backend -p 4000:4000 \ -e SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \ -e SUPABASE_KEY="${{ secrets.SUPABASE_KEY }}" \ ${{ secrets.DOCKER_USERNAME }}/facelog-backend
+            docker run -d --name backend -p 4000:4000 -e SUPABASE_URL="${{ secrets.SUPABASE_URL }}" -e SUPABASE_KEY="${{ secrets.SUPABASE_KEY }}" ${{ secrets.DOCKER_USERNAME }}/facelog-backend
 
             echo "🚀 Starting new frontend container..."
             docker run -d --name frontend -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/facelog-frontend
