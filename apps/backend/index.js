@@ -1,9 +1,7 @@
 const express = require("express");
-const { Pool } = require("pg");
-const dotenv = require("dotenv");
 const cors = require("cors");
-
-dotenv.config();
+require("dotenv").config();
+const supabase = require("./db.js"); // Supabase client
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -11,37 +9,35 @@ const port = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
 
-// PostgreSQL connection
-// const pool = new Pool({
-//   connectionString: process.env.DATABASE_URL,
-//   ssl: {
-//     rejectUnauthorized: false,
-//   },
-// });
-
-// pool
-//   .connect()
-//   .then(() => console.log("✅ Connected to PostgreSQL"))
-//   .catch((err) => {
-//     console.error("❌ Failed to connect to PostgreSQL:", err);
-//     process.exit(1);
-//   });
-
-// Basic root test
+// Root route
 app.get("/", (req, res) => {
-  res.send("Backend is running!");
+  res.send("✅ Supabase-powered backend is running!");
 });
 
-// Optional: DB health route
+app.get("/users", async (req, res) => {
+  const { data, error } = await supabase.from("users").select("*");
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+// Health check using Supabase (query current time)
 app.get("/health", async (req, res) => {
   try {
-    const result = await pool.query("SELECT NOW()");
-    res.send(`PostgreSQL is alive! Time: ${result.rows[0].now}`);
+    const { data, error } = await supabase.rpc("now"); // Use a Postgres function or fallback
+    if (error) throw error;
+    res.send(`Supabase is alive! Time: ${data}`);
   } catch (err) {
-    res.status(500).send("DB error: " + err.message);
+    res.status(500).send("Supabase error: " + err.message);
   }
 });
 
+app.get("/users", async (req, res) => {
+  const { data, error } = await supabase.from("users").select("*");
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+// Start the server
 app.listen(port, () => {
   console.log(`🚀 Server is running on port ${port}`);
 });
